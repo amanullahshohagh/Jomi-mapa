@@ -1,0 +1,26 @@
+name: Build APK
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: unzip -q jomi_mapa.zip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - working-directory: jomi_mapa
+        run: |
+          flutter create . --org com.jomimapa --project-name jomi_mapa --platforms=android
+          python3 tool/patch_android.py
+          flutter pub get
+          dart run flutter_launcher_icons
+          flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jomi-mapa-apk
+          path: jomi_mapa/build/app/outputs/flutter-apk/app-release.apk
